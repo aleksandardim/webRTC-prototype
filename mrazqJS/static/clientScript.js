@@ -6,6 +6,9 @@ qrCodeImg.setAttribute("src", "https://api.qrserver.com/v1/create-qr-code/?&size
 // signaling websocket с неговите събития
 const signalingWebSocket = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 
+let isRemoteDescInit = false;
+let iceCandidates = []; 
+
 signalingWebSocket.addEventListener("message", event => { // при получаване
     const msg = JSON.parse(event.data)
 
@@ -35,7 +38,8 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             // разфасоваме sdp офертата
             remoteSDP = JSON.parse(msg.message).message;
 
-            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP));
+            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            .then(() => {isRemoteDescInit = true})
             
             videoConnection.createAnswer()
             .then(answer => {
@@ -51,13 +55,26 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             remoteSDP = JSON.parse(msg.message).message;
 
             videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            .then(() => {isRemoteDescInit = true})
             
             break;
         case "ice-candidate":
-            const iceCandidate = msg.candidate
+            const candidate = msg.candidate
+            
+            if (isRemoteDescInit) {
+                videoConnection.addIceCandidate(candidate)
+                console.log("Ice candidate added")
+                
+                while (iceCandidates.length > 0) {
+                    videoConnection.addIceCandidate(iceCandidates.shift())
+                }
 
-            videoConnection.addIceCandidate(iceCandidate)
-            console.log("Ice candidate added")
+                break;
+            }
+
+            iceCandidates.push(candidate)
+
+            break;
     }
 });
 

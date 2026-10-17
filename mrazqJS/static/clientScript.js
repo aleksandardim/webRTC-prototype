@@ -3,10 +3,17 @@ const qrCodeImg = document.getElementById("qr-code")
 
 qrCodeImg.setAttribute("src", "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href))
 
+async function flushIceCandidates() {
+    while (iceCandidates.length > 0) {
+        const candidate = iceCandidates.shift();
+        await pc.addIceCandidate(candidate);
+        console.log("Queued ICE candidate added");
+    }
+}
+
 // signaling websocket с неговите събития
 const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 
-let isRemoteDescInit = false;
 let iceCandidates = []; 
 
 ws.addEventListener("message", async event => { // при получаване
@@ -37,7 +44,8 @@ ws.addEventListener("message", async event => { // при получаване
             remoteSDP = JSON.parse(msg.message).message;
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
-            isRemoteDescInit = true
+            
+            await flushIceCandidates();
             
             const answer = await pc.createAnswer()
             await pc.setLocalDescription(answer)
@@ -51,23 +59,12 @@ ws.addEventListener("message", async event => { // при получаване
             remoteSDP = JSON.parse(msg.message).message;
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
-            isRemoteDescInit = true
+            
+            await flushIceCandidates();
             
             break;
         case "ice-candidate":
             const candidate = msg.candidate
-            
-            if (isRemoteDescInit) {
-                await pc.addIceCandidate(candidate)
-                console.log("Ice candidate added")
-                
-                while (iceCandidates.length > 0) {
-                    await pc.addIceCandidate(iceCandidates.shift())
-                }
-
-                break;
-            }
-
             iceCandidates.push(candidate)
 
             break;

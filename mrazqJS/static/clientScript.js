@@ -4,12 +4,12 @@ const qrCodeImg = document.getElementById("qr-code")
 qrCodeImg.setAttribute("src", "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href))
 
 // signaling websocket с неговите събития
-const signalingWebSocket = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 
 let isRemoteDescInit = false;
 let iceCandidates = []; 
 
-signalingWebSocket.addEventListener("message", event => { // при получаване
+ws.addEventListener("message", event => { // при получаване
     const msg = JSON.parse(event.data)
 
     switch (msg.title) {
@@ -18,12 +18,12 @@ signalingWebSocket.addEventListener("message", event => { // при получа
                 case "peer-joined":
                     console.log("peer-joined")
         
-                    videoConnection.createOffer()
+                    pc.createOffer()
                     .then((offer) => {
                         // задава описанието от офертата ни, с която почваме да търсим ice кандидати
-                        videoConnection.setLocalDescription(offer)
+                        pc.setLocalDescription(offer)
 
-                        signalingWebSocket.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
+                        ws.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
                         console.log("sdp-offer sent")
                     })
 
@@ -38,14 +38,14 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             // разфасоваме sdp офертата
             remoteSDP = JSON.parse(msg.message).message;
 
-            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
             .then(() => {isRemoteDescInit = true})
             
-            videoConnection.createAnswer()
+            pc.createAnswer()
             .then(answer => {
-                videoConnection.setLocalDescription(answer)
+                pc.setLocalDescription(answer)
                 
-                signalingWebSocket.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
+                ws.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
                 console.log("sdp-answer sent")
             })
 
@@ -54,7 +54,7 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             console.log("remote sdp-answer received")
             remoteSDP = JSON.parse(msg.message).message;
 
-            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
             .then(() => {isRemoteDescInit = true})
             
             break;
@@ -62,11 +62,11 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             const candidate = msg.candidate
             
             if (isRemoteDescInit) {
-                videoConnection.addIceCandidate(candidate)
+                pc.addIceCandidate(candidate)
                 console.log("Ice candidate added")
                 
                 while (iceCandidates.length > 0) {
-                    videoConnection.addIceCandidate(iceCandidates.shift())
+                    pc.addIceCandidate(iceCandidates.shift())
                 }
 
                 break;
@@ -78,11 +78,11 @@ signalingWebSocket.addEventListener("message", event => { // при получа
     }
 });
 
-signalingWebSocket.addEventListener("open", () => {
+ws.addEventListener("open", () => {
     console.log("WebSocket connection initialized.");
 });
 
-signalingWebSocket.addEventListener("error", event => {
+ws.addEventListener("error", event => {
     console.error("WebSocket error:", event);
 });
 
@@ -91,7 +91,7 @@ const videoGrid = document.getElementById("video-grid")
 const myVideo = document.createElement("video")
 myVideo.muted = true
 
-const videoConnection = new RTCPeerConnection({
+const pc = new RTCPeerConnection({
     "iceServers": [
         {
             urls: "stun:stun.l.google.com:19302"
@@ -106,27 +106,27 @@ navigator.mediaDevices.getUserMedia({
     addVideoStream(myVideo, stream) // нашия видим видео поток
 
     stream.getTracks().forEach((track) => {
-        videoConnection.addTrack(track, stream)
+        pc.addTrack(track, stream)
     })
 })
 
 // дефинираме RTP transeivers за видео и за аудио
-videoConnection.addTransceiver("video", {
+pc.addTransceiver("video", {
     direction: "sendrecv"
 });
 
-videoConnection.addTransceiver("audio", {
+pc.addTransceiver("audio", {
     direction: "sendrecv"
 });
 
-videoConnection.addEventListener("icecandidate", (e) => { // когато намери ice кандидат
-    signalingWebSocket.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
+pc.addEventListener("icecandidate", (e) => { // когато намери ice кандидат
+    ws.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
 
 // чуждото аудио-видео
 const remoteVideo = document.createElement("video")
 
-videoConnection.addEventListener("track", (e) => {
+pc.addEventListener("track", (e) => {
     addVideoStream(remoteVideo, e.streams[0]);
 })
 

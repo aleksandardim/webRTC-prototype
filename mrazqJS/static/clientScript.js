@@ -54,7 +54,10 @@ signalingWebSocket.addEventListener("message", event => { // при получа
             
             break;
         case "ice-candidate":
-            break;
+            const iceCandidate = msg.candidate
+
+            videoConnection.addIceCandidate(iceCandidate)
+            console.log("Ice candidate added")
     }
 });
 

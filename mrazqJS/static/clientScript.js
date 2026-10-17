@@ -106,6 +106,13 @@ videoConnection.addEventListener("icecandidate", (e) => { // когато нам
     signalingWebSocket.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
 
+// чуждото аудио-видео
+const remoteVideo = document.createElement("video")
+
+videoConnection.addEventListener("track", (e) => {
+    addVideoStream(remoteVideo, e.streams[0]);
+})
+
 function addVideoStream(video, stream) {
     video.srcObject = stream
     video.addEventListener("loadedmetadata", () => {

@@ -8,6 +8,7 @@ class SignalingConsumer(WebsocketConsumer):
             return
 
         self.send(text_data=json.dumps({
+            "title": event["title"], 
             "message": event["message"]
         }))
 
@@ -24,6 +25,7 @@ class SignalingConsumer(WebsocketConsumer):
             {
                 "type": "chat.message",
                 "sender_id": self.channel_name,
+                "title": "peer-status",
                 "message": "peer-joined",
             }
         )
@@ -40,6 +42,7 @@ class SignalingConsumer(WebsocketConsumer):
             {
                 "type": "chat.message",
                 "sender_id": self.channel_name,
+                "title": json.loads(text_data)["title"],
                 "message": text_data,
             }
         )
@@ -50,6 +53,7 @@ class SignalingConsumer(WebsocketConsumer):
             {
                 "type": "chat.message",
                 "sender_id": self.channel_name,
+                "title": "peer-status",
                 "message": "peer-left",
             }
         )

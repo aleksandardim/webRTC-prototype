@@ -9,52 +9,61 @@ const signalingWebSocket = new WebSocket(`ws://${window.location.host}/${documen
 signalingWebSocket.addEventListener("message", event => { // при получаване
     const msg = JSON.parse(event.data)
 
-    switch (msg.message) {
-        case "peer-joined":
-            console.log("peer-joined")
+    switch (msg.title) {
+        case "peer-status":
+            switch (msg.message) {
+                case "peer-joined":
+                    console.log("peer-joined")
         
-            videoConnection.createOffer()
-            .then((offer) => {
-                // задава описанието от офертата ни, с която почваме да търсим ice кандидати
-                videoConnection.setLocalDescription(offer)
+                    videoConnection.createOffer()
+                    .then((offer) => {
+                        // задава описанието от офертата ни, с която почваме да търсим ice кандидати
+                        videoConnection.setLocalDescription(offer)
 
-                signalingWebSocket.send(JSON.stringify(offer))
-            })
+                        signalingWebSocket.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
+                        console.log("sdp-offer sent")
+                    })
 
-            break;
-        case "peer-left":
-            console.log("peer-left")
-            break;
-        default: // SDP offers
-            // разфасоваме sdp офертата
-            remoteSDP = JSON.parse(msg.message);
-
-            // ако е отговор?:
-            if (remoteSDP.type === "answer") {
-                videoConnection.setRemoteDescription(remoteSDP)
-                
-                break;
+                    break;
+                case "peer-left":
+                    console.log("peer-left")
+                    break;
             }
+            break; 
+        case "sdp-offer": // SDP offers
+            console.log("remote sdp-offer received")
+            // разфасоваме sdp офертата
+            remoteSDP = JSON.parse(msg.message).message;
 
-            videoConnection.setRemoteDescription(msg);
+            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP));
             
             videoConnection.createAnswer()
             .then(answer => {
                 videoConnection.setLocalDescription(answer)
                 
-                signalingWebSocket.send(JSON.stringify(answer))
+                signalingWebSocket.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
+                console.log("sdp-answer sent")
             })
 
+            break;
+        case "sdp-answer":
+            console.log("remote sdp-answer received")
+            remoteSDP = JSON.parse(msg.message).message;
+
+            videoConnection.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            
+            break;
+        case "ice-candidate":
             break;
     }
 });
 
 signalingWebSocket.addEventListener("open", () => {
-    console.log("Осъществена е WebSocket връзка.");
+    console.log("WebSocket connection initialized.");
 });
 
 signalingWebSocket.addEventListener("error", event => {
-    console.error("WebSocket грешка:", event);
+    console.error("WebSocket error:", event);
 });
 
 // оправяме локалното видео
@@ -91,7 +100,7 @@ videoConnection.addTransceiver("audio", {
 });
 
 videoConnection.addEventListener("icecandidate", (e) => { // когато намери ice кандидат
-    signalingWebSocket.send(JSON.stringify({"type": "ice-candidate", "candidate": e.candidate}))
+    signalingWebSocket.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
 
 function addVideoStream(video, stream) {

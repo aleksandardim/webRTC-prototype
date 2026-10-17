@@ -9,7 +9,7 @@ const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById
 let isRemoteDescInit = false;
 let iceCandidates = []; 
 
-ws.addEventListener("message", event => { // при получаване
+ws.addEventListener("message", async event => { // при получаване
     const msg = JSON.parse(event.data)
 
     switch (msg.title) {
@@ -18,14 +18,12 @@ ws.addEventListener("message", event => { // при получаване
                 case "peer-joined":
                     console.log("peer-joined")
         
-                    pc.createOffer()
-                    .then((offer) => {
-                        // задава описанието от офертата ни, с която почваме да търсим ice кандидати
-                        pc.setLocalDescription(offer)
+                    const offer = await pc.createOffer()
+                    // задава описанието от офертата ни, с която почваме да търсим ice кандидати
+                    await pc.setLocalDescription(offer)
 
-                        ws.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
-                        console.log("sdp-offer sent")
-                    })
+                    ws.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
+                    console.log("sdp-offer sent")
 
                     break;
                 case "peer-left":
@@ -38,35 +36,33 @@ ws.addEventListener("message", event => { // при получаване
             // разфасоваме sdp офертата
             remoteSDP = JSON.parse(msg.message).message;
 
-            pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
-            .then(() => {isRemoteDescInit = true})
+            await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            isRemoteDescInit = true
             
-            pc.createAnswer()
-            .then(answer => {
-                pc.setLocalDescription(answer)
-                
-                ws.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
-                console.log("sdp-answer sent")
-            })
+            const answer = await pc.createAnswer()
+            await pc.setLocalDescription(answer)
+            
+            ws.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
+            console.log("sdp-answer sent")
 
             break;
         case "sdp-answer":
             console.log("remote sdp-answer received")
             remoteSDP = JSON.parse(msg.message).message;
 
-            pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
-            .then(() => {isRemoteDescInit = true})
+            await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            isRemoteDescInit = true
             
             break;
         case "ice-candidate":
             const candidate = msg.candidate
             
             if (isRemoteDescInit) {
-                pc.addIceCandidate(candidate)
+                await pc.addIceCandidate(candidate)
                 console.log("Ice candidate added")
                 
                 while (iceCandidates.length > 0) {
-                    pc.addIceCandidate(iceCandidates.shift())
+                    await pc.addIceCandidate(iceCandidates.shift())
                 }
 
                 break;

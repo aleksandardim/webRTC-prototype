@@ -1,0 +1,17 @@
+{% extends "base.html"%}
+
+{% block content %}
+
+{% load static %}
+
+<img id="qr-code" hidden></img>
+
+<link rel="stylesheet" href="{% static 'style.css' %}">
+
+<div id="video-grid"></div>
+
+<div id="uuid-div" data-uuid="{{ uuid }}"></div>
+
+<script src="{% static 'clientScript.js' %}"></script>
+
+{% endblock %}

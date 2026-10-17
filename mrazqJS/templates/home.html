@@ -1,0 +1,27 @@
+{% extends "base.html"%}
+
+{% block content %}
+<button id="create-room">Създай стая</button>
+<button id="join-room">Влез в стая</button>
+
+<script>
+
+    const createRoomButton = document.getElementById("create-room")
+    const joinRoomButton = document.getElementById("join-room")
+
+    createRoomButton.addEventListener("click", () => {
+        window.location.href = "/" + crypto.randomUUID()
+    })
+
+    joinRoomButton.addEventListener("click", () => {
+        let uuidInput
+
+        uuidInput = prompt("UUID номер: ")
+
+        if (uuidInput == null || uuidInput == "") { return }
+
+        window.location.href = "/" + uuidInput
+    })
+</script>
+
+{% endblock %}

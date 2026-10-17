@@ -1,0 +1,13 @@
+video {
+    flex: 1 1 200px;
+    padding: 20px;
+    box-sizing: border-box;
+    width: 25vw
+}
+
+#video-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    flex-wrap: wrap;
+}

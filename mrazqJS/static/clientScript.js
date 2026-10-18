@@ -1,9 +1,7 @@
 const qrCodeImg = Object.assign(document.getElementById("qr-code"), { src: "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href)})
 
-const videoGrid = document.getElementById("video-grid")
-
-const remoteVideo = document.createElement("video")
-const myVideo = Object.assign(document.createElement("video"), { muted: true });
+const localVideo = document.getElementById("local-stream")
+const remoteVideo = document.getElementById("remote-stream")
 
 const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 const pc = new RTCPeerConnection({
@@ -25,8 +23,6 @@ pc.addTransceiver("audio", {
 });
 
 let iceCandidates = [];
-let isLocalConnectionInitialized = false
-
 
 async function flushIceCandidates(peerConnection, candidates) {
     while (candidates.length > 0) {
@@ -36,28 +32,22 @@ async function flushIceCandidates(peerConnection, candidates) {
     }
 }
 
-function addVideoStream(video, stream, elementId) {
-    video.srcObject = stream
-    video.id = elementId
-
-    video.addEventListener("loadedmetadata", () => {
-        video.play()
-    })
-
-    videoGrid.append(video)
-}
-
-navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
+const localReady = navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
 .then((localStream) => {
-    addVideoStream(myVideo, localStream, "local-stream")
+    localVideo.srcObject = localStream;
 
     localStream.getTracks().forEach((track) => {
         pc.addTrack(track, localStream)
     })
-
-    isLocalConnectionInitialized = true;
 })
 
+localVideo.addEventListener("loadedmetadata", () => {
+    localVideo.play()
+})
+
+remoteVideo.addEventListener("loadedmetadata", () => {
+    remoteVideo.play()
+})
 
 ws.addEventListener("message", async event => {
     const msg = JSON.parse(event.data)
@@ -68,9 +58,7 @@ ws.addEventListener("message", async event => {
                 case "peer-joined":
                     console.log("peer-joined")
 
-                    if (!isLocalConnectionInitialized) {
-                        await sleep(100)
-                    }
+                    await localReady
         
                     const offer = await pc.createOffer()
 
@@ -88,9 +76,7 @@ ws.addEventListener("message", async event => {
         case "sdp-offer":
             console.log("remote sdp-offer received")
 
-            if (!isLocalConnectionInitialized) {
-                await sleep(100)
-            }
+            await localReady
 
             remoteSDP = JSON.parse(msg.message).message;
 
@@ -115,8 +101,13 @@ ws.addEventListener("message", async event => {
             
             break;
         case "ice-candidate":
-            const candidate = msg.candidate
-            iceCandidates.push(candidate)
+            let candidate = JSON.parse(msg.message).candidate
+
+            if (pc.remoteDescription) {
+                await pc.addIceCandidate(candidate)
+            } else {
+                iceCandidates.push(candidate)
+            }
 
             break;
     }
@@ -134,6 +125,6 @@ pc.addEventListener("icecandidate", (e) => {
     ws.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
 
-pc.addEventListener("track", (e) => {
-    addVideoStream(remoteVideo, e.streams[0], "remote-stream");
-})
+pc.addEventListener("track", e => {
+    remoteVideo.srcObject = e.streams[0]
+});

@@ -60,6 +60,10 @@ ws.addEventListener("message", async event => {
                     break;
                 case "peer-left":
                     console.log("peer-left")
+
+                    pc.close()
+                    remoteVideo.srcObject = null
+
                     break;
             }
             break; 

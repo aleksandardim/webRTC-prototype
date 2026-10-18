@@ -11,6 +11,24 @@ async function flushIceCandidates() {
     }
 }
 
+async function setUpLocalStream() {
+    let localStream = await navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
+    addVideoStream(myVideo, localStream) // нашия видим видео поток
+
+    localStream.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream)
+    })
+}
+
+
+const pc = new RTCPeerConnection({
+    "iceServers": [
+        {
+            urls: "stun:stun.l.google.com:19302"
+        }
+    ]
+})
+
 // signaling websocket с неговите събития
 const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 
@@ -24,6 +42,8 @@ ws.addEventListener("message", async event => { // при получаване
             switch (msg.message) {
                 case "peer-joined":
                     console.log("peer-joined")
+
+                    await setUpLocalStream()
         
                     const offer = await pc.createOffer()
                     // задава описанието от офертата ни, с която почваме да търсим ice кандидати
@@ -40,6 +60,9 @@ ws.addEventListener("message", async event => { // при получаване
             break; 
         case "sdp-offer": // SDP offers
             console.log("remote sdp-offer received")
+
+            await setUpLocalStream()
+
             // разфасоваме sdp офертата
             remoteSDP = JSON.parse(msg.message).message;
 
@@ -83,25 +106,6 @@ ws.addEventListener("error", event => {
 const videoGrid = document.getElementById("video-grid")
 const myVideo = document.createElement("video")
 myVideo.muted = true
-
-const pc = new RTCPeerConnection({
-    "iceServers": [
-        {
-            urls: "stun:stun.l.google.com:19302"
-        }
-    ]
-})
-
-navigator.mediaDevices.getUserMedia({
-    "audio": true,
-    "video": true
-}).then(stream => {
-    addVideoStream(myVideo, stream) // нашия видим видео поток
-
-    stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream)
-    })
-})
 
 // дефинираме RTP transeivers за видео и за аудио
 pc.addTransceiver("video", {

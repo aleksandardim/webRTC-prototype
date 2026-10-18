@@ -1,7 +1,29 @@
-// създаваме qr код с линк към стаята
-const qrCodeImg = document.getElementById("qr-code")
+const qrCodeImg = Object.assign(document.getElementById("qr-code"), { src: "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href)})
 
-qrCodeImg.setAttribute("src", "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href))
+const videoGrid = document.getElementById("video-grid")
+
+const remoteVideo = document.createElement("video")
+const myVideo = Object.assign(document.createElement("video"), { muted: true });
+
+const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+const pc = new RTCPeerConnection({
+    "iceServers": [
+        {
+            urls: "stun:stun.l.google.com:19302"
+        }
+    ]
+})
+
+pc.addTransceiver("video", {
+    direction: "sendrecv"
+});
+
+pc.addTransceiver("audio", {
+    direction: "sendrecv"
+});
+
+let iceCandidates = []; 
+
 
 async function flushIceCandidates() {
     while (iceCandidates.length > 0) {
@@ -13,28 +35,25 @@ async function flushIceCandidates() {
 
 async function setUpLocalStream() {
     let localStream = await navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
-    addVideoStream(myVideo, localStream, "local-stream") // нашия видим видео поток
+    addVideoStream(myVideo, localStream, "local-stream")
 
     localStream.getTracks().forEach((track) => {
         pc.addTrack(track, localStream)
     })
 }
 
+function addVideoStream(video, stream, elementId) {
+    video.srcObject = stream
+    video.id = elementId
 
-const pc = new RTCPeerConnection({
-    "iceServers": [
-        {
-            urls: "stun:stun.l.google.com:19302"
-        }
-    ]
-})
+    video.addEventListener("loadedmetadata", () => {
+        video.play()
+    })
 
-// signaling websocket с неговите събития
-const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+    videoGrid.append(video)
+}
 
-let iceCandidates = []; 
-
-ws.addEventListener("message", async event => { // при получаване
+ws.addEventListener("message", async event => {
     const msg = JSON.parse(event.data)
 
     switch (msg.title) {
@@ -46,7 +65,7 @@ ws.addEventListener("message", async event => { // при получаване
                     await setUpLocalStream()
         
                     const offer = await pc.createOffer()
-                    // задава описанието от офертата ни, с която почваме да търсим ice кандидати
+
                     await pc.setLocalDescription(offer)
 
                     ws.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
@@ -58,12 +77,11 @@ ws.addEventListener("message", async event => { // при получаване
                     break;
             }
             break; 
-        case "sdp-offer": // SDP offers
+        case "sdp-offer":
             console.log("remote sdp-offer received")
 
             await setUpLocalStream()
 
-            // разфасоваме sdp офертата
             remoteSDP = JSON.parse(msg.message).message;
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
@@ -102,38 +120,10 @@ ws.addEventListener("error", event => {
     console.error("WebSocket error:", event);
 });
 
-// оправяме локалното видео
-const videoGrid = document.getElementById("video-grid")
-const myVideo = document.createElement("video")
-myVideo.muted = true
-
-// дефинираме RTP transeivers за видео и за аудио
-pc.addTransceiver("video", {
-    direction: "sendrecv"
-});
-
-pc.addTransceiver("audio", {
-    direction: "sendrecv"
-});
-
-pc.addEventListener("icecandidate", (e) => { // когато намери ice кандидат
+pc.addEventListener("icecandidate", (e) => {
     ws.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
-
-// чуждото аудио-видео
-const remoteVideo = document.createElement("video")
 
 pc.addEventListener("track", (e) => {
     addVideoStream(remoteVideo, e.streams[0], "remote-stream");
 })
-
-function addVideoStream(video, stream, elementId) {
-    video.srcObject = stream
-    video.id = elementId
-
-    video.addEventListener("loadedmetadata", () => {
-        video.play()
-    })
-
-    videoGrid.append(video)
-}

@@ -13,7 +13,7 @@ async function flushIceCandidates() {
 
 async function setUpLocalStream() {
     let localStream = await navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
-    addVideoStream(myVideo, localStream) // нашия видим видео поток
+    addVideoStream(myVideo, localStream, "local-stream") // нашия видим видео поток
 
     localStream.getTracks().forEach((track) => {
         pc.addTrack(track, localStream)
@@ -124,13 +124,16 @@ pc.addEventListener("icecandidate", (e) => { // когато намери ice к
 const remoteVideo = document.createElement("video")
 
 pc.addEventListener("track", (e) => {
-    addVideoStream(remoteVideo, e.streams[0]);
+    addVideoStream(remoteVideo, e.streams[0], "remote-stream");
 })
 
-function addVideoStream(video, stream) {
+function addVideoStream(video, stream, elementId) {
     video.srcObject = stream
+    video.id = elementId
+
     video.addEventListener("loadedmetadata", () => {
         video.play()
     })
+
     videoGrid.append(video)
 }

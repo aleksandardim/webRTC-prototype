@@ -12,16 +12,6 @@ const pc = new RTCPeerConnection({
     ]
 })
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-pc.addTransceiver("video", {
-    direction: "sendrecv"
-});
-
-pc.addTransceiver("audio", {
-    direction: "sendrecv"
-});
-
 let iceCandidates = [];
 
 async function flushIceCandidates(peerConnection, candidates) {
@@ -122,6 +112,10 @@ ws.addEventListener("error", event => {
 });
 
 pc.addEventListener("icecandidate", (e) => {
+    if (!e.candidate) {
+        return
+    }
+
     ws.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
 })
 

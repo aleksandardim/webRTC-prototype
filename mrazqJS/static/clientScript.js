@@ -28,10 +28,10 @@ let iceCandidates = [];
 let isLocalConnectionInitialized = false
 
 
-async function flushIceCandidates() {
-    while (iceCandidates.length > 0) {
-        const candidate = iceCandidates.shift();
-        await pc.addIceCandidate(candidate);
+async function flushIceCandidates(peerConnection, candidates) {
+    while (candidates.length > 0) {
+        const candidate = candidates.shift();
+        await peerConnection.addIceCandidate(candidate);
         console.log("Queued ICE candidate added");
     }
 }
@@ -96,7 +96,7 @@ ws.addEventListener("message", async event => {
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
             
-            await flushIceCandidates();
+            await flushIceCandidates(pc, iceCandidates);
             
             const answer = await pc.createAnswer()
             await pc.setLocalDescription(answer)
@@ -111,7 +111,7 @@ ws.addEventListener("message", async event => {
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
             
-            await flushIceCandidates();
+            await flushIceCandidates(pc, iceCandidates);
             
             break;
         case "ice-candidate":

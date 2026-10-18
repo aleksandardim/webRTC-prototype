@@ -14,6 +14,8 @@ const pc = new RTCPeerConnection({
     ]
 })
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 pc.addTransceiver("video", {
     direction: "sendrecv"
 });
@@ -22,7 +24,8 @@ pc.addTransceiver("audio", {
     direction: "sendrecv"
 });
 
-let iceCandidates = []; 
+let iceCandidates = [];
+let isLocalConnectionInitialized = false
 
 
 async function flushIceCandidates() {
@@ -31,15 +34,6 @@ async function flushIceCandidates() {
         await pc.addIceCandidate(candidate);
         console.log("Queued ICE candidate added");
     }
-}
-
-async function setUpLocalStream() {
-    let localStream = await navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
-    addVideoStream(myVideo, localStream, "local-stream")
-
-    localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream)
-    })
 }
 
 function addVideoStream(video, stream, elementId) {
@@ -53,6 +47,18 @@ function addVideoStream(video, stream, elementId) {
     videoGrid.append(video)
 }
 
+navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
+.then((localStream) => {
+    addVideoStream(myVideo, localStream, "local-stream")
+
+    localStream.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream)
+    })
+
+    isLocalConnectionInitialized = true;
+})
+
+
 ws.addEventListener("message", async event => {
     const msg = JSON.parse(event.data)
 
@@ -62,7 +68,9 @@ ws.addEventListener("message", async event => {
                 case "peer-joined":
                     console.log("peer-joined")
 
-                    await setUpLocalStream()
+                    if (!isLocalConnectionInitialized) {
+                        await sleep(100)
+                    }
         
                     const offer = await pc.createOffer()
 
@@ -80,7 +88,9 @@ ws.addEventListener("message", async event => {
         case "sdp-offer":
             console.log("remote sdp-offer received")
 
-            await setUpLocalStream()
+            if (!isLocalConnectionInitialized) {
+                await sleep(100)
+            }
 
             remoteSDP = JSON.parse(msg.message).message;
 

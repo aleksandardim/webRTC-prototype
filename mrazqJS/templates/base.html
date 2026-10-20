@@ -4,10 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebRTC прототип</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <h1>WebRTC прототип</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>WebRTC прототип</h1>
+        <button id="qr-code-btn">QR code</button>
+    </div>
     <hr>
+
+    <script>
+        const qrCodeButton = document.getElementById("qr-code-btn")
+
+        qrCodeButton.addEventListener("click", () => {
+            Swal.fire({
+                imageUrl: "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href),
+                imageAlt: "QR code"
+            });
+        })
+    </script>
 
     {% block content %} {% endblock %}
 </body>

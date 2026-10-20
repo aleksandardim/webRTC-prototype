@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-8mbf4%!s+=%r+=&r@rbd74!eg-pwh9gobub1+k(kis6(nflso&
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "192.168.0.132",
+    "prototype.bulgariancom.bg"
+] # python manage.py runserver 0.0.0.0:8000
 
 
 # Application definition
@@ -46,6 +51,7 @@ ASGI_APPLICATION = "mrazqJavascript.asgi.application"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -134,7 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = BASE_DIR / r"mrazqJS\static"
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

@@ -3,7 +3,7 @@ const qrCodeImg = Object.assign(document.getElementById("qr-code"), { src: "http
 const localVideo = document.getElementById("local-stream")
 const remoteVideo = document.getElementById("remote-stream")
 
-const ws = new WebSocket(`ws://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 const pc = new RTCPeerConnection({
     "iceServers": [
         {

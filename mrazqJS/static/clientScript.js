@@ -1,5 +1,3 @@
-const qrCodeImg = Object.assign(document.getElementById("qr-code"), { src: "https://api.qrserver.com/v1/create-qr-code/?&size=200x200&data=".concat(window.location.href)})
-
 const localVideo = document.getElementById("local-stream")
 const remoteVideo = document.getElementById("remote-stream")
 
@@ -22,7 +20,7 @@ async function flushIceCandidates(peerConnection, candidates) {
     }
 }
 
-const localReady = navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
+const isLocalStreamReady = navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
 .then((localStream) => {
     localVideo.srcObject = localStream;
 
@@ -48,13 +46,13 @@ ws.addEventListener("message", async event => {
                 case "peer-joined":
                     console.log("peer-joined")
 
-                    await localReady
+                    await isLocalStreamReady
         
-                    const offer = await pc.createOffer()
+                    const localSdpOffer = await pc.createOffer()
 
-                    await pc.setLocalDescription(offer)
+                    await pc.setLocalDescription(localSdpOffer)
 
-                    ws.send(JSON.stringify({"title": "sdp-offer", "message": offer}))
+                    ws.send(JSON.stringify({"title": "sdp-offer", "message": localSdpOffer}))
                     console.log("sdp-offer sent")
 
                     break;
@@ -70,26 +68,26 @@ ws.addEventListener("message", async event => {
         case "sdp-offer":
             console.log("remote sdp-offer received")
 
-            await localReady
+            await isLocalStreamReady
 
-            remoteSDP = JSON.parse(msg.message).message;
+            RemoteSdpOffer = JSON.parse(msg.message).message;
 
-            await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            await pc.setRemoteDescription(new RTCSessionDescription(RemoteSdpOffer))
             
             await flushIceCandidates(pc, iceCandidates);
             
-            const answer = await pc.createAnswer()
-            await pc.setLocalDescription(answer)
+            const sdpAnswer = await pc.createAnswer()
+            await pc.setLocalDescription(localSdpAnswer)
             
-            ws.send(JSON.stringify({"title": "sdp-answer", "message": answer}))
+            ws.send(JSON.stringify({"title": "sdp-answer", "message": localSdpAnswer}))
             console.log("sdp-answer sent")
 
             break;
         case "sdp-answer":
             console.log("remote sdp-answer received")
-            remoteSDP = JSON.parse(msg.message).message;
+            remoteSdpAnswer = JSON.parse(msg.message).message;
 
-            await pc.setRemoteDescription(new RTCSessionDescription(remoteSDP))
+            await pc.setRemoteDescription(new RTCSessionDescription(remoteSdpAnswer))
             
             await flushIceCandidates(pc, iceCandidates);
             

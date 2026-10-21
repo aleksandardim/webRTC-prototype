@@ -1,13 +1,13 @@
 {% extends "base.html"%}
 
 {% block content %}
-<button id="create-room">Създай стая</button>
-<button id="join-room">Влез в стая</button>
+<button id="create-room-button">Създай стая</button>
+<button id="join-room-button">Влез в стая</button>
 
 <script>
 
-    const createRoomButton = document.getElementById("create-room")
-    const joinRoomButton = document.getElementById("join-room")
+    const createRoomButton = document.getElementById("create-room-button")
+    const joinRoomButton = document.getElementById("join-room-button")
 
     createRoomButton.addEventListener("click", () => {
         window.location.href = "/" + crypto.randomUUID()

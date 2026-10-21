@@ -76,7 +76,7 @@ ws.addEventListener("message", async event => {
             
             await flushIceCandidates(pc, iceCandidates);
             
-            const sdpAnswer = await pc.createAnswer()
+            const localSdpAnswer = await pc.createAnswer()
             await pc.setLocalDescription(localSdpAnswer)
             
             ws.send(JSON.stringify({"title": "sdp-answer", "message": localSdpAnswer}))

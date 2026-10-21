@@ -2,15 +2,9 @@ const localVideo = document.getElementById("local-stream")
 const remoteVideo = document.getElementById("remote-stream")
 
 const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
-const pc = new RTCPeerConnection({
-    "iceServers": [
-        {
-            urls: "stun:stun.l.google.com:19302"
-        }
-    ]
-})
 
 let iceCandidates = [];
+let pc;
 
 async function flushIceCandidates(peerConnection, candidates) {
     while (candidates.length > 0) {
@@ -24,10 +18,36 @@ const isLocalStreamReady = navigator.mediaDevices.getUserMedia({"audio": true, "
 .then((localStream) => {
     localVideo.srcObject = localStream;
 
-    localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream)
-    })
+    return localStream;
 })
+
+function initializePeerConnection(webSocket, localStream) {
+    const peerConnection = new RTCPeerConnection({
+        "iceServers": [
+            {
+                urls: "stun:stun.l.google.com:19302"
+            }
+        ]
+    })
+
+    peerConnection.addEventListener("icecandidate", (e) => {
+        if (!e.candidate) {
+            return
+        }
+
+        webSocket.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
+    })
+
+    peerConnection.addEventListener("track", e => {
+        remoteVideo.srcObject = e.streams[0]
+    });
+
+    localStream.getTracks().forEach((track) => {
+        peerConnection.addTrack(track, localStream)
+    })
+
+    return peerConnection;
+}
 
 localVideo.addEventListener("loadedmetadata", () => {
     localVideo.play()
@@ -46,10 +66,11 @@ ws.addEventListener("message", async event => {
                 case "peer-joined":
                     console.log("peer-joined")
 
-                    await isLocalStreamReady
+                    const localStream = await isLocalStreamReady
+                    
+                    pc = initializePeerConnection(ws, localStream)
         
                     const localSdpOffer = await pc.createOffer()
-
                     await pc.setLocalDescription(localSdpOffer)
 
                     ws.send(JSON.stringify({"title": "sdp-offer", "message": localSdpOffer}))
@@ -68,10 +89,11 @@ ws.addEventListener("message", async event => {
         case "sdp-offer":
             console.log("remote sdp-offer received")
 
-            await isLocalStreamReady
+            const localStream = await isLocalStreamReady
+            
+            pc = initializePeerConnection(ws, localStream)
 
             RemoteSdpOffer = JSON.parse(msg.message).message;
-
             await pc.setRemoteDescription(new RTCSessionDescription(RemoteSdpOffer))
             
             await flushIceCandidates(pc, iceCandidates);
@@ -113,14 +135,8 @@ ws.addEventListener("error", event => {
     console.error("WebSocket error:", event);
 });
 
-pc.addEventListener("icecandidate", (e) => {
-    if (!e.candidate) {
-        return
-    }
-
-    ws.send(JSON.stringify({"title": "ice-candidate", "candidate": e.candidate}))
-})
-
-pc.addEventListener("track", e => {
-    remoteVideo.srcObject = e.streams[0]
-});
+// редове, с които whitenoise да се храни
+// редове, с които whitenoise да се храни
+// редове, с които whitenoise да се храни
+// редове, с които whitenoise да се храни
+// редове, с които whitenoise да се храни

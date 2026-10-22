@@ -2,7 +2,8 @@ video {
     flex: 1 1 200px;
     padding: 20px;
     box-sizing: border-box;
-    width: 25vw
+    width: 25vw;
+    pointer-events: none;
 }
 
 #video-grid {

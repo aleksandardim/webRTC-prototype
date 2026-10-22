@@ -7,15 +7,14 @@ const main = document.querySelector("main")
 
 const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
 
-const chatHTML = `
+const chatHTML = String.raw`
 <div id="chat">
     <h2 style="text-align: center;">Чат</h2>
 
-    <textarea id="chat-area" readonly>
-    </textarea>
+    <textarea id="chat-textarea" readonly></textarea>
 
-    <form>
-        <input type="text" placeholder="Съобщение" required autocomplete="off" maxlength="500">
+    <form id="chat-form">
+        <input type="text" name="message" id="message-field" placeholder="Съобщение" pattern=".*\S.*" required autocomplete="off" maxlength="500">
         <input type="submit">
     </form>
 </div>
@@ -23,6 +22,8 @@ const chatHTML = `
 
 let iceCandidates = [];
 let pc;
+
+let chatMessages = [];
 
 chatButton.hidden = false
 chatButton.disabled = false
@@ -145,6 +146,16 @@ ws.addEventListener("message", async event => {
             }
 
             break;
+        case "chat":
+            const chatMessage = JSON.parse(JSON.parse(event.data).message).message // ТОВА Е ЗА ПРОМЯНАААААА
+
+            chatMessages.push(chatMessage)
+
+            if (main.id === "main") {
+                document.getElementById("chat-textarea").value += chatMessage.concat("\n\n")
+            }
+
+            break;
     }
 });
 
@@ -157,15 +168,44 @@ ws.addEventListener("error", event => {
 });
 
 chatButton.addEventListener("click", () => {
-    // със променянето на id-то на main се обвързва тага с css дефинциите в style.css
+    // със променянето на id-то към "main" се обвързва тага с css дефинциите в style.css
     if (main.id === "main") {
         main.id = null
         document.getElementById("chat").remove()
     } else {
         main.id = "main"
         main.insertAdjacentHTML("beforeend", chatHTML)
+
+        const chatTextarea = document.getElementById("chat-textarea")
+
+        chatMessages.forEach((msg) => {
+            chatTextarea.value += msg.concat("\n\n")
+        })
+
+        const chatForm = document.getElementById("chat-form")
+
+        chatForm.addEventListener("submit", (e) => {
+            e.preventDefault()
+
+            const messageField = document.getElementById("message-field")
+
+            const chatFormData = new FormData(chatForm);
+            const chatMessage = Object.fromEntries(chatFormData.entries()).message.trim()
+
+            // изпращаме го на другия човек, не на себе си
+            ws.send(JSON.stringify({"title": "chat", "message": chatMessage}))
+
+            chatMessages.push(chatMessage)
+
+            chatTextarea.value += chatMessage.concat("\n\n")
+
+            messageField.value = ""
+            messageField.focus()
+        })
     }
 })
+
+
 
 // редове, с които whitenoise да се храни
 // редове, с които whitenoise да се храни

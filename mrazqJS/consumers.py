@@ -25,8 +25,8 @@ class SignalingConsumer(WebsocketConsumer):
             {
                 "type": "chat.message",
                 "sender_id": self.channel_name,
-                "title": "peer-status",
-                "message": "peer-joined",
+                "title": "peer-joined",
+                "message": "",
             }
         )
 
@@ -53,8 +53,8 @@ class SignalingConsumer(WebsocketConsumer):
             {
                 "type": "chat.message",
                 "sender_id": self.channel_name,
-                "title": "peer-status",
-                "message": "peer-left",
+                "title": "peer-left",
+                "message": "",
             }
         )
 

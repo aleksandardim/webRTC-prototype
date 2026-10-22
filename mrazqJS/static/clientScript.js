@@ -22,6 +22,7 @@ const chatHTML = String.raw`
 
 let iceCandidates = [];
 let pc;
+let localStream;
 
 let chatMessages = [];
 
@@ -80,42 +81,38 @@ remoteVideo.addEventListener("loadedmetadata", () => {
 })
 
 ws.addEventListener("message", async event => {
-    const msg = JSON.parse(event.data)
+    const webSocketMessage = JSON.parse(event.data)
 
-    switch (msg.title) {
-        case "peer-status":
-            switch (msg.message) {
-                case "peer-joined":
-                    console.log("peer-joined")
+    switch (webSocketMessage.title) {
+        case "peer-joined":
+            console.log("peer-joined")
 
-                    const localStream = await isLocalStreamReady
-                    
-                    pc = initializePeerConnection(ws, localStream)
-        
-                    const localSdpOffer = await pc.createOffer()
-                    await pc.setLocalDescription(localSdpOffer)
-
-                    ws.send(JSON.stringify({"title": "sdp-offer", "message": localSdpOffer}))
-                    console.log("sdp-offer sent")
-
-                    break;
-                case "peer-left":
-                    console.log("peer-left")
-
-                    pc.close()
-                    remoteVideo.srcObject = null
-
-                    break;
-            }
-            break; 
-        case "sdp-offer":
-            console.log("remote sdp-offer received")
-
-            const localStream = await isLocalStreamReady
+            localStream = await isLocalStreamReady
             
             pc = initializePeerConnection(ws, localStream)
 
-            RemoteSdpOffer = JSON.parse(msg.message).message;
+            const localSdpOffer = await pc.createOffer()
+            await pc.setLocalDescription(localSdpOffer)
+
+            ws.send(JSON.stringify({"title": "sdp-offer", "message": localSdpOffer}))
+            console.log("sdp-offer sent")
+
+            break;
+        case "peer-left":
+            console.log("peer-left")
+
+            pc.close()
+            remoteVideo.srcObject = null
+
+            break;
+        case "sdp-offer":
+            console.log("remote sdp-offer received")
+
+            localStream = await isLocalStreamReady
+            
+            pc = initializePeerConnection(ws, localStream)
+
+            RemoteSdpOffer = JSON.parse(webSocketMessage.message).message;
             await pc.setRemoteDescription(new RTCSessionDescription(RemoteSdpOffer))
             
             await flushIceCandidates(pc, iceCandidates);
@@ -129,7 +126,7 @@ ws.addEventListener("message", async event => {
             break;
         case "sdp-answer":
             console.log("remote sdp-answer received")
-            remoteSdpAnswer = JSON.parse(msg.message).message;
+            remoteSdpAnswer = JSON.parse(webSocketMessage.message).message;
 
             await pc.setRemoteDescription(new RTCSessionDescription(remoteSdpAnswer))
             
@@ -137,7 +134,7 @@ ws.addEventListener("message", async event => {
             
             break;
         case "ice-candidate":
-            let candidate = JSON.parse(msg.message).candidate
+            let candidate = JSON.parse(webSocketMessage.message).candidate
 
             if (pc.remoteDescription) {
                 await pc.addIceCandidate(candidate)
@@ -178,8 +175,8 @@ chatButton.addEventListener("click", () => {
 
         const chatTextarea = document.getElementById("chat-textarea")
 
-        chatMessages.forEach((msg) => {
-            chatTextarea.value += msg.concat("\n\n")
+        chatMessages.forEach((webSocketMessage) => {
+            chatTextarea.value += webSocketMessage.concat("\n\n")
         })
 
         const chatForm = document.getElementById("chat-form")

@@ -11,3 +11,28 @@ video {
     gap: 16px;
     flex-wrap: wrap;
 }
+
+#main {
+    display: grid;
+    grid-template-columns: 75% 25%;
+    height: calc(100vh - 140px);
+}
+
+#chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#chat-area {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+}
+
+form {
+    display: grid;
+    grid-template-columns: 75% 25%;
+}

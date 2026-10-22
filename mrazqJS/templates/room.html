@@ -4,17 +4,16 @@
 
 {% load static %}
 
-<img id="qr-code" hidden></img>
-
-<link rel="stylesheet" href="{% static 'style.css' %}">
-
-<div id="video-grid">
-    <video id="local-stream" style="transform: scaleX(-1);" autoplay playsinline muted></video>
-    <video id="remote-stream" autoplay playsinline></video>
-</div>
-
+<link rel="stylesheet" href="{% static 'style.css' %}?v=12">
 <div id="uuid-div" data-uuid="{{ uuid }}"></div>
 
-<script src="{% static 'clientScript.js' %}?v=16"></script>
+<main>
+    <div id="video-grid">
+        <video id="local-stream" style="transform: scaleX(-1);" autoplay playsinline muted></video>
+        <video id="remote-stream" autoplay playsinline></video>
+    </div>
+</main>
+
+<script src="{% static 'clientScript.js' %}?v=19"></script>
 
 {% endblock %}

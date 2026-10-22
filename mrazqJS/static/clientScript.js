@@ -1,10 +1,31 @@
 const localVideo = document.getElementById("local-stream")
 const remoteVideo = document.getElementById("remote-stream")
 
+const chatButton = document.getElementById("chat-button")
+
+const main = document.querySelector("main")
+
 const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+
+const chatHTML = `
+<div id="chat">
+    <h2 style="text-align: center;">Чат</h2>
+
+    <textarea id="chat-area" readonly>
+    </textarea>
+
+    <form>
+        <input type="text" placeholder="Съобщение" required autocomplete="off" maxlength="500">
+        <input type="submit">
+    </form>
+</div>
+`
 
 let iceCandidates = [];
 let pc;
+
+chatButton.hidden = false
+chatButton.disabled = false
 
 async function flushIceCandidates(peerConnection, candidates) {
     while (candidates.length > 0) {
@@ -134,6 +155,17 @@ ws.addEventListener("open", () => {
 ws.addEventListener("error", event => {
     console.error("WebSocket error:", event);
 });
+
+chatButton.addEventListener("click", () => {
+    // със променянето на id-то на main се обвързва тага с css дефинциите в style.css
+    if (main.id === "main") {
+        main.id = null
+        document.getElementById("chat").remove()
+    } else {
+        main.id = "main"
+        main.insertAdjacentHTML("beforeend", chatHTML)
+    }
+})
 
 // редове, с които whitenoise да се храни
 // редове, с които whitenoise да се храни

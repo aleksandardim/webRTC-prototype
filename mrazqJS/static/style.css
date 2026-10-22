@@ -18,6 +18,12 @@ video {
     height: calc(100vh - 140px);
 }
 
+@media (max-width: 768px) {
+  #main {
+    grid-template-columns: 1fr;
+  }
+}
+
 #chat {
     display: flex;
     flex-direction: column;

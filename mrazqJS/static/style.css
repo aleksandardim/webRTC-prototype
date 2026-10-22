@@ -19,9 +19,17 @@ video {
 }
 
 @media (max-width: 768px) {
-  #main {
-    grid-template-columns: 1fr;
-  }
+    #main {
+        grid-template-columns: 1fr;
+    }
+
+    #chat-textspace {
+        min-height: 300px;
+    }
+
+    #chat > :nth-child(1) { order: 1; } 
+    #chat > :nth-child(2) { order: 3; }
+    #chat > :nth-child(3) { order: 2; }
 }
 
 #chat {
@@ -32,10 +40,12 @@ video {
 
 #chat-textspace {
     flex: 1;
-    min-height: 0;
+    overflow-y: auto;
     width: 100%;
     box-sizing: border-box;
     resize: none;
+    background-color: white;
+    padding: 5px;
 }
 
 form {

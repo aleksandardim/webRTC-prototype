@@ -30,7 +30,7 @@ video {
     min-height: 0;
 }
 
-#chat-textarea {
+#chat-textspace {
     flex: 1;
     min-height: 0;
     width: 100%;

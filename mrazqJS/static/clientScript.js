@@ -1,3 +1,14 @@
+class ChatMessage {
+    constructor(message, isIncoming) {
+        this.message = message;
+        this.isIncoming = isIncoming;
+    }
+
+    prepareForSending() {
+        this.isIncoming = !this.isIncoming;
+    }
+}
+
 const localVideo = document.getElementById("local-stream")
 const remoteVideo = document.getElementById("remote-stream")
 
@@ -11,7 +22,7 @@ const chatHTML = String.raw`
 <div id="chat">
     <h2 style="text-align: center;">Чат</h2>
 
-    <textarea id="chat-textarea" readonly></textarea>
+    <div id="chat-textspace" readonly></div>
 
     <form id="chat-form">
         <input type="text" name="message" id="message-field" placeholder="Съобщение" pattern=".*\S.*" required autocomplete="off" maxlength="500">
@@ -144,12 +155,12 @@ ws.addEventListener("message", async event => {
 
             break;
         case "chat":
-            const chatMessage = JSON.parse(JSON.parse(event.data).message).message // ТОВА Е ЗА ПРОМЯНАААААА
+            const chatMessageInbound = JSON.parse(JSON.parse(event.data).message).message
 
-            chatMessages.push(chatMessage)
+            chatMessages.push(new ChatMessage(chatMessageInbound, true))
 
             if (main.id === "main") {
-                document.getElementById("chat-textarea").value += chatMessage.concat("\n\n")
+                document.getElementById("chat-textspace").innerHTML += '<i style="font-weight: bold">'.concat(chatMessageInbound, "</i>", "<br>")
             }
 
             break;
@@ -173,10 +184,15 @@ chatButton.addEventListener("click", () => {
         main.id = "main"
         main.insertAdjacentHTML("beforeend", chatHTML)
 
-        const chatTextarea = document.getElementById("chat-textarea")
+        const chatTextSpace = document.getElementById("chat-textspace")
 
-        chatMessages.forEach((webSocketMessage) => {
-            chatTextarea.value += webSocketMessage.concat("\n\n")
+        chatMessages.forEach((chMsg) => {
+            if (chMsg.isIncoming) {
+                chatTextSpace.innerHTML += '<i style="font-weight: bold">'.concat(chMsg.message, "</i>", "<br>")
+            } else {
+                chatTextSpace.innerHTML += chMsg.message.concat("<br>")
+            }
+            
         })
 
         const chatForm = document.getElementById("chat-form")
@@ -187,14 +203,14 @@ chatButton.addEventListener("click", () => {
             const messageField = document.getElementById("message-field")
 
             const chatFormData = new FormData(chatForm);
-            const chatMessage = Object.fromEntries(chatFormData.entries()).message.trim()
+            const chatMessageOutbound = Object.fromEntries(chatFormData.entries()).message.trim()
 
             // изпращаме го на другия човек, не на себе си
-            ws.send(JSON.stringify({"title": "chat", "message": chatMessage}))
+            ws.send(JSON.stringify({"title": "chat", "message": chatMessageOutbound}))
 
-            chatMessages.push(chatMessage)
+            chatMessages.push(new ChatMessage(chatMessageOutbound, false))
 
-            chatTextarea.value += chatMessage.concat("\n\n")
+            chatTextSpace.innerHTML += chatMessageOutbound.concat("<br>")
 
             messageField.value = ""
             messageField.focus()

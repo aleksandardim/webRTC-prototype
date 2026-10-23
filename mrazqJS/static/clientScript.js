@@ -147,7 +147,7 @@ ws.addEventListener("message", async event => {
         case "ice-candidate":
             let candidate = JSON.parse(webSocketMessage.message).candidate
 
-            if (pc.remoteDescription) {
+            if (pc && pc.remoteDescription) {
                 await pc.addIceCandidate(candidate)
             } else {
                 iceCandidates.push(candidate)

@@ -160,7 +160,10 @@ ws.addEventListener("message", async event => {
             chatMessages.push(new ChatMessage(chatMessageInbound, true))
 
             if (main.id === "main") {
-                document.getElementById("chat-textspace").innerHTML += '<i style="font-weight: bold">'.concat(chatMessageInbound, "</i>", "<br>")
+                const chatTextSpace = document.getElementById("chat-textspace")
+                
+                chatTextSpace.innerHTML += '<i style="font-weight: bold">'.concat(chatMessageInbound, "</i>", "<br>")
+                chatTextSpace.scrollTop = chatTextSpace.scrollHeight
             }
 
             break;
@@ -192,7 +195,8 @@ chatButton.addEventListener("click", () => {
             } else {
                 chatTextSpace.innerHTML += chMsg.message.concat("<br>")
             }
-            
+
+            chatTextSpace.scrollTop = chatTextSpace.scrollHeight
         })
 
         const chatForm = document.getElementById("chat-form")
@@ -211,6 +215,7 @@ chatButton.addEventListener("click", () => {
             chatMessages.push(new ChatMessage(chatMessageOutbound, false))
 
             chatTextSpace.innerHTML += chatMessageOutbound.concat("<br>")
+            chatTextSpace.scrollTop = chatTextSpace.scrollHeight
 
             messageField.value = ""
             messageField.focus()

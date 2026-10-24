@@ -2,6 +2,8 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
+from .views import roomID_to_users_count
+
 class WSConsumer(WebsocketConsumer):
     def chat_message(self, event):
         if event.get("sender_id") == self.channel_name:
@@ -48,6 +50,11 @@ class WSConsumer(WebsocketConsumer):
         )
 
     def disconnect(self, code):
+        roomID_to_users_count[self.room_id] -= 1
+
+        if roomID_to_users_count[self.room_id] == 0:
+            del roomID_to_users_count[self.room_id]
+
         async_to_sync(self.channel_layer.group_send)(
             self.room_id,
             {

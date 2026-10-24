@@ -2,7 +2,7 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
-class SignalingConsumer(WebsocketConsumer):
+class WSConsumer(WebsocketConsumer):
     def chat_message(self, event):
         if event.get("sender_id") == self.channel_name:
             return

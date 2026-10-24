@@ -16,7 +16,7 @@ const chatButton = document.getElementById("chat-button")
 
 const main = document.querySelector("main")
 
-const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/signaling/`)
+const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/`)
 
 const chatHTML = String.raw`
 <div id="chat">
@@ -48,13 +48,6 @@ async function flushIceCandidates(peerConnection, candidates) {
     }
 }
 
-const isLocalStreamReady = navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
-.then((localStream) => {
-    localVideo.srcObject = localStream;
-
-    return localStream;
-})
-
 function initializePeerConnection(webSocket, localStream) {
     const peerConnection = new RTCPeerConnection({
         "iceServers": [
@@ -82,6 +75,13 @@ function initializePeerConnection(webSocket, localStream) {
 
     return peerConnection;
 }
+
+const isLocalStreamReady = navigator.mediaDevices.getUserMedia({"audio": true, "video": true})
+.then((localStream) => {
+    localVideo.srcObject = localStream;
+
+    return localStream;
+})
 
 localVideo.addEventListener("loadedmetadata", () => {
     localVideo.play()

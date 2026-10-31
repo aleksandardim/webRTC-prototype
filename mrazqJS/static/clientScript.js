@@ -49,13 +49,22 @@ async function flushIceCandidates(peerConnection, candidates) {
 }
 
 function initializePeerConnection(webSocket, localStream) {
-    const peerConnection = new RTCPeerConnection({
+    const peerConnectionConfig = {
         "iceServers": [
             {
                 urls: "stun:stun.l.google.com:19302"
+            },
+            {
+                urls: [
+                    "turn:turn.bulgariancom.com:3478?transport=udp",
+                ],
+                username: "admin",
+                credential: "admin"
             }
         ]
-    })
+    }
+
+    const peerConnection = new RTCPeerConnection(peerConnectionConfig)
 
     peerConnection.addEventListener("icecandidate", (e) => {
         if (!e.candidate) {

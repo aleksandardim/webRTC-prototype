@@ -14,6 +14,9 @@ const remoteVideo = document.getElementById("remote-stream")
 
 const chatButton = document.getElementById("chat-button")
 
+const chatButtonDefaultBGColor = chatButton.style.backgroundColor
+
+
 const main = document.querySelector("main")
 
 const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/`)
@@ -173,6 +176,8 @@ ws.addEventListener("message", async event => {
                 
                 chatTextSpace.innerHTML += '<i style="font-weight: bold">'.concat(chatMessageInbound, "</i>", "<br>")
                 chatTextSpace.scrollTop = chatTextSpace.scrollHeight
+            } else {
+                chatButton.style.backgroundColor = "gold"
             }
 
             break;
@@ -193,6 +198,8 @@ chatButton.addEventListener("click", () => {
         main.id = null
         document.getElementById("chat").remove()
     } else {
+        chatButton.style.backgroundColor = chatButtonDefaultBGColor
+
         main.id = "main"
         main.insertAdjacentHTML("beforeend", chatHTML)
 

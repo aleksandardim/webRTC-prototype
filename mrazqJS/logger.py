@@ -1,4 +1,6 @@
 import logging
+import os
+
 from pathlib import Path
 
 from datetime import datetime
@@ -12,14 +14,26 @@ logger = logging.getLogger("mrazqJS")
 logger.setLevel(logging.DEBUG)
 
 if not logger.handlers:
-    file_handler = logging.FileHandler(
-        LOG_DIR / f"{datetime.now().astimezone(TIMEZONE).strftime('%Y-%m-%d_%H-%M-%S')}.log",
-        encoding="utf-8"
-    )
+    if (os.name == "nt"):
+        file_handler = logging.FileHandler(
+            LOG_DIR / f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log",
+            encoding="utf-8"
+        )
 
-    formatter = logging.Formatter(
-        f"{datetime.now().astimezone(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
-    )
+        formatter = logging.Formatter(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
+        )
+    else:
+        from datetime import timedelta
+
+        file_handler = logging.FileHandler(
+            LOG_DIR / f"{(datetime.now().replace(tzinfo=TIMEZONE)).strftime('%Y-%m-%d_%H-%M-%S')}.log",
+            encoding="utf-8"
+        )
+
+        formatter = logging.Formatter(
+            f"{datetime.now().replace(tzinfo=TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
+        )
 
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

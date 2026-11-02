@@ -3,12 +3,13 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from .views import roomID_to_users_count
+from .logger import logger
 
 from datetime import datetime
 
 class WSConsumer(WebsocketConsumer):
     def __log(self, message_type: str, log_message: str):
-        print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} [{message_type}] {log_message}')
+        logger.info(f"[{message_type}] {log_message}")
 
     def chat_message(self, event):
         if event.get("sender_id") == self.channel_name:

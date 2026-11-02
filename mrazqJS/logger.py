@@ -27,12 +27,12 @@ if not logger.handlers:
         from datetime import timedelta
 
         file_handler = logging.FileHandler(
-            LOG_DIR / f"{(datetime.now().replace(tzinfo=TIMEZONE)).strftime('%Y-%m-%d_%H-%M-%S')}.log",
+            LOG_DIR / f"{(datetime.now() + timedelta(hours=2)).strftime('%Y-%m-%d_%H-%M-%S')}.log",
             encoding="utf-8"
         )
 
         formatter = logging.Formatter(
-            f"{datetime.now().replace(tzinfo=TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
+            f"{(datetime.now() + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
         )
 
     file_handler.setFormatter(formatter)

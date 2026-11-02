@@ -37,7 +37,7 @@ class WSConsumer(WebsocketConsumer):
             }
         )
 
-        self.__log("user-joined", f"{self.channel_name[-2:]} in {self.room_id[:3]}")
+        self.__log("user-joined", f"{self.channel_name[-2:]} in room {self.room_id[:3]}")
 
         self.accept()
 
@@ -57,7 +57,7 @@ class WSConsumer(WebsocketConsumer):
         )
 
         if json.loads(text_data)["title"] == "chat":
-            self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in {self.room_id[:3]}')
+            self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in room {self.room_id[:3]}')
 
     def disconnect(self, code):
         roomID_to_users_count[self.room_id] -= 1
@@ -80,4 +80,4 @@ class WSConsumer(WebsocketConsumer):
             self.channel_name
         )
 
-        self.__log("user-left", f"{self.channel_name[-2:]} from {self.room_id[:3]}")
+        self.__log("user-left", f"{self.channel_name[-2:]} from room {self.room_id[:3]}")

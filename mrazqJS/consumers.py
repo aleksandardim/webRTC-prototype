@@ -4,7 +4,12 @@ from asgiref.sync import async_to_sync
 
 from .views import roomID_to_users_count
 
+from datetime import datetime
+
 class WSConsumer(WebsocketConsumer):
+    def __log(self, message_type: str, log_message: str):
+        print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} [{message_type}] {log_message}')
+
     def chat_message(self, event):
         if event.get("sender_id") == self.channel_name:
             return
@@ -32,6 +37,8 @@ class WSConsumer(WebsocketConsumer):
             }
         )
 
+        self.__log("user-joined", f"{self.channel_name[-2:]} in {self.room_id[:3]}")
+
         self.accept()
 
 
@@ -48,6 +55,9 @@ class WSConsumer(WebsocketConsumer):
                 "message": text_data,
             }
         )
+
+        if json.loads(text_data)["title"] == "chat":
+            self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in {self.room_id[:3]}')
 
     def disconnect(self, code):
         roomID_to_users_count[self.room_id] -= 1
@@ -69,3 +79,5 @@ class WSConsumer(WebsocketConsumer):
             self.room_id,
             self.channel_name
         )
+
+        self.__log("user-left", f"{self.channel_name[-2:]} from {self.room_id[:3]}")

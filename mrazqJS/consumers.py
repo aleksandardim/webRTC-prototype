@@ -48,11 +48,8 @@ class WSConsumer(WebsocketConsumer):
             case "chat":
                 self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in room {self.room_id[:3]}')
             case "user-joined-data":
-                self.__log("user-joined", f"""
-                    {self.channel_name[-2:]} in room {self.room_id[:3]}\n
-                    {json.dumps(json.loads(text_data)["message"], indent=4, ensure_ascii=False)}
-                """)
-                
+                self.__log("user-joined", f"{self.channel_name[-2:]} in room {self.room_id[:3]}\n{json.dumps(json.loads(text_data)["message"], indent=4, ensure_ascii=False)}")
+
                 return
 
         async_to_sync(self.channel_layer.group_send)(

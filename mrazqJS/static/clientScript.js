@@ -19,7 +19,7 @@ const chatButtonDefaultBGColor = chatButton.style.backgroundColor
 
 const main = document.querySelector("main")
 
-const ws = new WebSocket(`wss://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/`)
+const ws = new WebSocket(`${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/${document.getElementById("uuid-div").dataset.uuid}/ws/`)
 
 const chatHTML = String.raw`
 <div id="chat">

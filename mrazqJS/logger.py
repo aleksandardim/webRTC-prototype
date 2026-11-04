@@ -1,39 +1,28 @@
 import logging
-import os
 
 from pathlib import Path
 
 from datetime import datetime
 
+from zoneinfo import ZoneInfo
+
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-TIMEZONE = datetime.now().astimezone().tzinfo
+TIMEZONE = datetime.ZoneInfo("Europe/Sofia")
 
 logger = logging.getLogger("mrazqJS")
 logger.setLevel(logging.DEBUG)
 
 if not logger.handlers:
-    if (os.name == "nt"):
-        file_handler = logging.FileHandler(
-            LOG_DIR / f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log",
-            encoding="utf-8"
-        )
+    file_handler = logging.FileHandler(
+        LOG_DIR / f"{datetime.now(TIMEZONE).strftime('%Y-%m-%d_%H-%M-%S')}.log",
+        encoding="utf-8"
+    )
 
-        formatter = logging.Formatter(
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
-        )
-    else:
-        from datetime import timedelta
-
-        file_handler = logging.FileHandler(
-            LOG_DIR / f"{(datetime.now() + timedelta(hours=2)).strftime('%Y-%m-%d_%H-%M-%S')}.log",
-            encoding="utf-8"
-        )
-
-        formatter = logging.Formatter(
-            f"{(datetime.now() + timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
-        )
+    formatter = logging.Formatter(
+        f"{datetime.now(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
+    )
 
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

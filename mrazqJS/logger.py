@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-TIMEZONE = datetime.ZoneInfo("Europe/Sofia")
+TIMEZONE = ZoneInfo("Europe/Sofia")
 
 logger = logging.getLogger("mrazqJS")
 logger.setLevel(logging.DEBUG)

@@ -116,3 +116,4 @@ media/
 mrazqJS/static/test*
 
 logs/*
+mrazqJavascript/settings.py

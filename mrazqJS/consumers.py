@@ -1,11 +1,10 @@
 import json
+
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from .views import roomID_to_users_count
 from .logger import logger
-
-from datetime import datetime
 
 class WSConsumer(WebsocketConsumer):
     def __log(self, message_type: str, log_message: str):
@@ -38,8 +37,6 @@ class WSConsumer(WebsocketConsumer):
             }
         )
 
-        self.__log("user-joined", f"{self.channel_name[-2:]} in room {self.room_id[:3]}")
-
         self.accept()
 
 
@@ -47,6 +44,17 @@ class WSConsumer(WebsocketConsumer):
         return super().send(text_data, bytes_data, close)
 
     def receive(self, text_data = None, bytes_data = None):
+        match json.loads(text_data)["title"]:
+            case "chat":
+                self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in room {self.room_id[:3]}')
+            case "user-joined-data":
+                self.__log("user-joined", f"""
+                    {self.channel_name[-2:]} in room {self.room_id[:3]}\n
+                    {json.dumps(json.loads(text_data)["message"], indent=4, ensure_ascii=False)}
+                """)
+                
+                return
+
         async_to_sync(self.channel_layer.group_send)(
             self.room_id,
             {
@@ -56,9 +64,6 @@ class WSConsumer(WebsocketConsumer):
                 "message": text_data,
             }
         )
-
-        if json.loads(text_data)["title"] == "chat":
-            self.__log("sent-message", f'{self.channel_name[-2:]}: "{json.loads(text_data).get("message")}" in room {self.room_id[:3]}')
 
     def disconnect(self, code):
         roomID_to_users_count[self.room_id] -= 1

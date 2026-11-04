@@ -186,6 +186,13 @@ ws.addEventListener("message", async event => {
 
 ws.addEventListener("open", () => {
     console.log("WebSocket connection initialized.");
+
+    if (navigator.userAgentData === undefined) {
+        ws.send(JSON.stringify({"title": "user-joined-data", "message": navigator.userAgent}))
+        return
+    }
+
+    ws.send(JSON.stringify({"title": "user-joined-data", "message": navigator.userAgentData}))
 });
 
 ws.addEventListener("error", event => {

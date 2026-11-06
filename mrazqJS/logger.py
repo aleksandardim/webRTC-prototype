@@ -21,6 +21,8 @@ if not logger.handlers:
     )
 
     formatter = logging.Formatter("%(asctime)s %(message)s")
+    
+    formatter.converter = lambda *args: datetime.now(TIMEZONE).timetuple()
 
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

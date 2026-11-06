@@ -20,9 +20,7 @@ if not logger.handlers:
         encoding="utf-8"
     )
 
-    formatter = logging.Formatter(
-        f"{datetime.now(TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')} %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s %(message)s")
 
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)

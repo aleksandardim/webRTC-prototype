@@ -53,14 +53,12 @@ async function flushIceCandidates(peerConnection, candidates) {
 
 function initializePeerConnection(webSocket, localStream) {
     const peerConnectionConfig = {
-        "iceServers": [
+        iceServers: [
             {
                 urls: "stun:stun.l.google.com:19302"
             },
             {
-                urls: [
-                    "turn:turn.bulgariancom.com:3478?transport=udp",
-                ],
+                urls: "turn:turn.bulgariancom.bg:3478?transport=udp",
                 username: "admin",
                 credential: "admin"
             }
